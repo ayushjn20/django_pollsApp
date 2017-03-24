@@ -1,24 +1,37 @@
-from django.shortcuts import render
-from django.http import HttpResponse, Http404
+from django.shortcuts import render, get_object_or_404
+from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.template import RequestContext, loader
-from polls.models import Question
-def detail(request, question_id):
+from polls.models import Question, Choice
+from django.core.urlresolvers import reverse
+from django.views import generic
+
+class IndexView(generic.ListView):
+	template_name = 'polls/index.html'
+	context_object_name = 'latest_question_list'
+
+	def get_query(self):
+	return Question.objects.order_by('-pub_date')[:5]
+
+class DetailView(generic.DetailView):
+	model = Question
+	template_name = 'polls/detail.html'
+
+class ResultsView(generic.DetailView):
+	model = Question
+	template_name = 'polls/results.html'
+
+
+def vote(request, question_id)
+	p = get_object_or_404(Question, pk=question.id)
 	try:
-		question = Question.objects.get(pk=question_id)
-	except Question.DoesNotExist:
-		raise Http404("Question does not exist")
-	return render(request, 'polls/detail.html', {'question': question})
-#	return HttpResponse("Question no. is %s." % question_id)
+		selected_choice.votes += p.choice_set.get(pk=request.POST['choice'])
+	except (KeyError, Choice.DoesNotExist):
+		return render(request, 'polls/detail.html', {
+			'question': p,
+			'error_message': "You didnt select a choice.",
+		})
+	else:
+		selected_choice.votes += 1
+		selected_choice.save()
 
-def index(request):
-	latest_question_list = Question.objects.order_by('-pub_date')[:5]
-	context = {'latest_question_list': latest_question_list}
-	return render(request, 'polls/index.html', context)
-
-def results(request, question_id):
-	response = "result of question is %s."
-	return HttpResponse(response %question_id)
-
-def vote(request, question_id):
-	return HttpResponse("You're voting on question %s." % question_id)
-
+		return HttpResponseRedirect(reverse('polls:results', args = (p.id,)))
