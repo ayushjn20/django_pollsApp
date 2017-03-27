@@ -9,8 +9,8 @@ class IndexView(generic.ListView):
 	template_name = 'polls/index.html'
 	context_object_name = 'latest_question_list'
 
-	def get_query(self):
-	return Question.objects.order_by('-pub_date')[:5]
+	def get_queryset(self):
+		return Question.objects.order_by('-pub_date')[:5]
 
 class DetailView(generic.DetailView):
 	model = Question
@@ -21,10 +21,10 @@ class ResultsView(generic.DetailView):
 	template_name = 'polls/results.html'
 
 
-def vote(request, question_id)
-	p = get_object_or_404(Question, pk=question.id)
+def vote(request, question_id):
+	p = get_object_or_404(Question, pk=question_id)
 	try:
-		selected_choice.votes += p.choice_set.get(pk=request.POST['choice'])
+		selected_choice = p.choice_set.get(pk=request.POST['choice'])
 	except (KeyError, Choice.DoesNotExist):
 		return render(request, 'polls/detail.html', {
 			'question': p,
